@@ -1,18 +1,15 @@
 package org.jenkins.plugins.staggerbuilds;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import hudson.Extension;
+import hudson.model.Executor;
 import hudson.model.Node;
 import hudson.model.Queue.BuildableItem;
 import hudson.model.queue.QueueTaskDispatcher;
 import hudson.model.queue.CauseOfBlockage;
+import jenkins.model.Jenkins;
 
 @Extension
 public class StaggerBuildsQueueTaskDispatcher extends QueueTaskDispatcher {
-
-	private final Map<Node, Long> lastBuildStartTimes = new HashMap<Node, Long>();
 
 	@Override
 	public CauseOfBlockage canTake(Node node, BuildableItem item) {
@@ -24,15 +21,20 @@ public class StaggerBuildsQueueTaskDispatcher extends QueueTaskDispatcher {
 		if (p == null)
 			return null;
 
-		Long now = (long) (System.currentTimeMillis() / 1000.0);
-		Long last = lastBuildStartTimes.get(node);
-		if (last == null)
-			last = (long) 0;
+		// If items are "pending", any executor may accept them anytime.
+		// Wait for "pending" list to be empty to be able to check the
+		// start time of builds.
+		if (Jenkins.getInstance().getQueue().getPendingItems().size() > 0)
+			return new BecausePendingBuilds();
 
-		if (!node.toComputer().isIdle() && now - last <= p.getStaggerSeconds())
-			return new BecauseStaggerEnabled(node, now - last);
+		// Evaluate the time since the last build was started on this node.
+		long staggerTime = Long.MAX_VALUE;
+		for (Executor e : node.toComputer().getExecutors())
+			if (e.isBusy())
+				staggerTime = Math.min(staggerTime, e.getElapsedTime());
 
-		lastBuildStartTimes.put(node, now);
+		if (staggerTime < p.getStaggerSeconds() * 1000)
+			return new BecauseStaggerEnabled(node, p.getStaggerSeconds());
 
 		return null;
 	}
@@ -50,8 +52,15 @@ public class StaggerBuildsQueueTaskDispatcher extends QueueTaskDispatcher {
 		@Override
 		public String getShortDescription() {
 			return String.format("Build staggering is enabled for node %s. "
-					+ "Waiting %d seconds before starting this build.", node,
+					+ "Minimum %d seconds between builds.", node,
 					staggerDuration);
+		}
+	}
+
+	public static class BecausePendingBuilds extends CauseOfBlockage {
+		@Override
+		public String getShortDescription() {
+			return "Builds are pending in the queue";
 		}
 	}
 }
