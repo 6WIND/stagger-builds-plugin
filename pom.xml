@@ -18,11 +18,12 @@
 
 	<groupId>com.6wind.jenkins</groupId>
 	<artifactId>stagger-builds</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.0</version>
 	<packaging>hpi</packaging>
 	<name>Stagger Builds plugin</name>
 	<description>
-		TODO
+		Allows to force parallel builds to be started separated by a
+		"cooldown" interval configurable by the user.
 	</description>
 
 	<licenses>
