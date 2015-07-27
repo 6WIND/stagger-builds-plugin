@@ -2,7 +2,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Copyright (c) 2015, 6WIND S.A. All rights reserved.                 *
  *                                                                     *
- * This file is part of the Jenkins Lockable Resources Plugin and is   *
+ * This file is part of the Jenkins Stagger Builds Plugin and is       *
  * published under the MIT license.                                    *
  *                                                                     *
  * See the "LICENSE.txt" file for more information.                    *
@@ -18,7 +18,7 @@
 
 	<groupId>com.6wind.jenkins</groupId>
 	<artifactId>stagger-builds</artifactId>
-	<version>1.0</version>
+	<version>1.1-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 	<name>Stagger Builds plugin</name>
 	<description>
